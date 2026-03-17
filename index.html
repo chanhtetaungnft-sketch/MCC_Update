@@ -100,7 +100,7 @@
         <h2>MCC & MDR Rate Search System</h2>
     </div>
 
-    <input type="text" id="searchInput" class="search-box" placeholder="Search by Code, Name or Business Type...">
+    <input type="text" id="searchInput" class="search-box" placeholder="Search by Code, Name, Business Type or Description...">
 
     <div class="table-wrapper">
         <table id="mccTable">
@@ -198,7 +198,7 @@
   { "c": "5399", "n": "MISCELLANEOUS GENERAL MERCHANDISE - SME", "add": "Any Businesses consider SME category", "type": "Small Business Owners (Wet Market, etc.)", s: 0.003, h: 0.0025, cs: 0.0021 },
   { "c": "5542", "n": "Fuels Dispenser, Automated", "add": "EV charging / CNG/ Petrol", "type": "Petrol Station", s: 0.003, h: 0.0025, cs: 0.0021 },
   { "c": "8398", "n": "ORGANIZATIONS RELIGIOUS", "add": "Organizations, Charitable (non-political) and Social Service", "type": "Donation (Charity/NGO)", s: 0.000, h: 0.0000, cs: 0.0005 }
-];
+  ];
 
     const formatPercent = (val) => {
         if (val === 0) return "0%";
@@ -208,33 +208,41 @@
     function displayData(data) {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = "";
+        
+        if (data.length === 0) {
+            tbody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>No data found</td></tr>";
+            return;
+        }
+
         data.forEach(item => {
-            const tr = `<tr>
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
                 <td><span class="mcc-tag">${item.c}</span></td>
                 <td>
                     <strong>${item.n}</strong><br>
-                    <small style="color:#64748b">${item.add}</small>
+                    <small style="color:#64748b">${item.add || ''}</small>
                     <div style="font-size:12px; color:#94a3b8; margin-top:4px;">Type: ${item.type}</div>
                 </td>
                 <td><span class="rate std-rate">${formatPercent(item.s)}</span></td>
-                <td><span class="rate hod-rate">${item.h === 0 ? '-' : formatPercent(item.h)}</span></td>
+                <td><span class="rate hod-rate">${item.h === 0 && item.s !== 0 ? '-' : formatPercent(item.h)}</span></td>
                 <td><span class="rate cs-rate">${formatPercent(item.cs)}</span></td>
-            </tr>`;
-            tbody.innerHTML += tr;
+            `;
+            tbody.appendChild(tr);
         });
     }
 
     document.getElementById('searchInput').addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase();
         const filtered = rawData.filter(i => 
-            i.c.includes(term) || 
+            i.c.toLowerCase().includes(term) || 
             i.n.toLowerCase().includes(term) || 
-            i.add.toLowerCase().includes(term) ||
+            (i.add && i.add.toLowerCase().includes(term)) ||
             i.type.toLowerCase().includes(term)
         );
         displayData(filtered);
     });
 
+    // Initial display
     displayData(rawData);
 </script>
 
